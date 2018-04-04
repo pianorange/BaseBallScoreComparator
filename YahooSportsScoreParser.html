@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script type="text/javascript">
+
+    var text_html = "";
+
+    var urlString = "";
+
+    $(document).on('click','#button01', function() {
+        //クリックした後の処理
+        console.log("button clicked");
+
+        //urlを取得する。
+        this.urlString = $('#url').val();
+        console.log("URL = " + this.urlString);
+
+        //5秒毎にYahooからデータを呼び出す。
+        setInterval( pollFromYahoo, 5000, this.urlString );
+
+        //pollFromYahoo(this.urlString);
+    });
+    
+    function pollFromYahoo(urlString) {
+        console.log("url in ajax" + urlString);
+            $.ajax({
+                   type: 'GET',
+                   //url: 'https://baseball.yahoo.co.jp/npb/game/2018033001/text?manual=1',
+                   url: encodeURI(urlString),
+                   dataType: 'html',
+                   success: function(data) {
+                    console.log("url in ajax" + this.urlString);
+                        this.text_html = data;
+
+                        // ------------------------------------------------------------
+                        // DOMParser オブジェクトを作成する
+                        // ------------------------------------------------------------
+                        var dom_parser = new DOMParser();
+
+                        // ------------------------------------------------------------
+                        // html 文字列から Document オブジェクトを作成する
+                        // ------------------------------------------------------------
+                        var document_obj = null;
+                        try {
+
+                            // ------------------------------------------------------------
+                            // html 文字列から Document オブジェクトを作成する
+                            // ------------------------------------------------------------
+                            document_obj = dom_parser.parseFromString(this.text_html , "text/html");
+            
+                            // ------------------------------------------------------------
+                            // パースに失敗したか調べる
+                            // ------------------------------------------------------------
+                            if(document_obj.getElementsByTagName("parsererror").length){
+                                document_obj = null;
+                            }
+
+                        }catch(e){
+                        }
+
+                        // パースに成功した
+                        if(document_obj){
+                            // 出力テスト
+                            var scoreboard = document_obj.getElementById("yjSNLiveTextscoreboard")
+                            .getElementsByTagName("div")[0]
+                            .getElementsByTagName("table")[0]
+                            .getElementsByTagName("tbody")[0];
+                            console.log(scoreboard);
+
+                            // console.log("ths")
+                            // var ths = scoreboard.querySelectorAll("th"), i;
+                            // for(i = 0; i < ths.length; ++i) {
+                            //     console.log(ths[i]);
+                            // }
+
+                            // console.log("tds")
+                            // var tds = scoreboard.querySelectorAll("td"), i;
+                            // for(i = 0; i < tds.length; ++i) {
+                            //     console.log(tds[i]);
+                            // }
+                            $('#sample01').append(document_obj.getElementById("yjSNLiveTextscoreboard"));
+                        }
+                   },
+                   error:function() {
+                       alert('問題がありました。');
+                   }
+            });
+        }
+    </script>
+</head>
+<body>
+    <ul>url : <input id="url"></input></ul>
+    <ul>url example: https://baseball.yahoo.co.jp/npb/game/2018033001/text?manual=1</ul>
+    <ul id="sample01"></ul>
+    <p><a href="#" id="button01">ボタン</a></p>
+</body>
+</html>
