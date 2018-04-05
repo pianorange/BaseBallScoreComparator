@@ -18,6 +18,8 @@ https://developer.mozilla.org/en-US/docs/Web/API/Document
     (test.js)
     import exfunc from './sup.js';
 
+https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelectorAll
+https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector
 
 **ajax async: false**
 http://nahosung.tistory.com/102
@@ -127,3 +129,39 @@ finally 블록을 예외가 발생하였을때 여러분의 스크립트가 우�
 
     // OUTPUT
     // caught inner "bogus"
+
+
+VSCode Plugins Note
+-
+https://terakoya.site/dev/visual-studio-code-recommend-plugin/
+
+Live HTML Previewer
+-
+http://kukekko.hatenablog.com/entry/2016/10/30/000121
+
+open-in-browser
+-
+Usage
+
+Open an html file, add shortcut Alt + B
+If you want to preview html in your default browser directly, please type Ctrl+K D
+
+
+PASTE Image
+-
+    
+capture screen to clipboard
+Open the command palette: Ctrl+Shift+P (Cmd+Shift+P on Mac)
+Type: "Paste Image" or you can use default keyboard binding: Ctrl+Alt+V (Cmd+Alt+V on Mac).
+Image will be saved in the folder that contains current editing file
+The relative path will be paste to current editing file
+
+TARGET
+-
+ーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+
+　・秋田魁
+　　http://sports.sakigake.jp/smp/sports/
+
+　・山梨日日
+　　https://sports.sannichi.co.jp/smp/sports/
