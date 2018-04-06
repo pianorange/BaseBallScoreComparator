@@ -1,6 +1,7 @@
 // import exfunc from './sup.js';
 
-const yahoo = "https://baseball.yahoo.co.jp/npb/schedule/?date=20180404";
+//const yahoo = "https://baseball.yahoo.co.jp/npb/schedule/?date=20180404";
+const yahoo = "https://baseball.yahoo.co.jp/npb/schedule/";
 
 // ------------------------------------------------------------
 // PatterA  top-score
@@ -31,7 +32,62 @@ function compareScoreData() {
     let timestamp = toLocaleString(new Date());
 
     let standardScoreList = getStandardScore(yahoo, timestamp);
-    let patternAScoreList = getPatternAScoreList(sakigake, timestamp);
+    let patternAScoreList = getPatternAScoreList(sannichi, timestamp);
+    var indexnum = 0;
+    var logStr = '';
+    $('#sample01').append(standardScoreList);
+   
+    for(standardScoreObj of standardScoreList){
+        console.log(standardScoreObj);
+        for(patternAScoreObj of patternAScoreList){
+            
+            if(indexnum == 0){
+                patternAScoreObj.score_A = 99;
+                ++indexnum;
+            }
+
+            console.log(patternAScoreObj);
+            if(standardScoreObj.teamName_A == patternAScoreObj.teamName_A
+            && standardScoreObj.teamName_B == patternAScoreObj.teamName_B){
+                if(standardScoreObj.score_A != patternAScoreObj.score_A
+                   || standardScoreObj.score_B != patternAScoreObj.score_B){
+                    patternAScoreObj.compareFlag = false;
+                    logStr += 'Standard teamA'+standardScoreObj.nameA;
+                    logStr += 'Standard ScoreA'+standardScoreObj.score_A;
+                    logStr += 'Standard teamB'+standardScoreObj.nameB;
+                    logStr += 'Standard ScoreB'+standardScoreObj.score_B;
+                    logStr += 'patternA teamA'+patternAScoreObj.nameA;
+                    logStr += 'patternA ScoreA'+patternAScoreObj.score_A;
+                    logStr += 'patternA teamB'+patternAScoreObj.nameB;
+                    logStr += 'patternA ScoreB'+patternAScoreObj.score_B;
+                    logStr += '<br>patternA Site'+patternAScoreObj.site;
+                    alert(logStr);
+                    $('#sample01').append( "<p>"+patternAScoreObj+"</p>");
+                }
+            }else if(standardScoreObj.teamName_A == patternAScoreObj.teamName_B
+                    && standardScoreObj.teamName_B == patternAScoreObj.teamName_A){
+                if(standardScoreObj.score_A != patternAScoreObj.score_B
+                  || standardScoreObj.score_B != patternAScoreObj.score_A){
+                    patternAScoreObj.compareFlag = false;
+                    logStr += 'Standard teamA'+standardScoreObj.nameA;
+                    logStr += 'Standard ScoreA'+standardScoreObj.score_A;
+                    logStr += 'Standard teamB'+standardScoreObj.nameB;
+                    logStr += 'Standard ScoreB'+standardScoreObj.score_B;
+                    logStr += 'patternA teamA'+patternAScoreObj.nameA;
+                    logStr += 'patternA ScoreA'+patternAScoreObj.score_A;
+                    logStr += 'patternA teamB'+patternAScoreObj.nameB;
+                    logStr += 'patternA ScoreB'+patternAScoreObj.score_B;
+                    logStr += '<br>patternA Site'+patternAScoreObj.site;
+                }
+            }
+        }
+    }
+
+    for(patternAScoreObj of patternAScoreList){
+        if(patternAScoreObj.compareFlag == false){
+            alert("データがScore一致しないサイトがあります。"+ logStr);
+        }
+    }
 
 
 
@@ -44,14 +100,14 @@ function getStandardScore(urlString, timestamp) {
     let document_obj = ParsingStringToDomObject(document_str) || 'notexist';
 
     // パースに成功した
-    console.log("print document_obj" + document_obj);
+    console.log("getStandardScore: print document_obj" + document_obj);
     if (document_obj == null) {
         console.log('getStandardScore :  document_obj == null');
     }
 
     //var matches = document_obj.querySelectorAll("#gm_sch table.teams tbody td.yjMS.bt");
     var matches = document_obj.querySelectorAll("#gm_sch table.teams");
-    console.log("matches" + matches);
+    console.log("getStandardScore: matches" + matches);
     var scoreObjList = [];
 
     for (var i = 0; i < matches.length; i++) {
@@ -61,7 +117,7 @@ function getStandardScore(urlString, timestamp) {
         var ScoreB = matches[i].children[0].children[0].children[2].children[0].children[0].children[2].children[0].innerText;
         //すべての項目取得後、ScoreDataObject単位で管理する。
         var scoreObj = new ScoreDataObject(nameA, Number(ScoreA), nameB, Number(ScoreB), timestamp, urlString, true);
-        console.log(scoreObj);
+        console.log("getStandardScore scoreObj"+scoreObj);
         scoreObjList.push(scoreObj);
     }
 
@@ -74,20 +130,20 @@ function getPatternAScoreList(urlString, timestamp) {
     let document_obj = ParsingStringToDomObject(document_str) || 'notexist';
 
     // パースに成功した
-    console.log("print document_obj" + document_obj);
+    console.log("getPatternAScoreList print document_obj" + document_obj);
     if (document_obj == null) {
-        console.log('getStandardScore :  document_obj == null');
+        console.log('getPatternAScoreList  :  document_obj == null');
     }
     var matches = document_obj.querySelectorAll("div.top-score section.score-detail-mini");
-    console.log("matches" + matches);
+    console.log("getPatternAScoreList matches" + matches);
     var scoreObjList = [];
 
     for (var i = 0; i < matches.length; i++) {
         //section.score-detail-mini p strong.team basball-(teamname)
         var nameA = matches[i].children[0].children[0].innerText;
         var nameB = matches[i].children[0].children[2].innerText;
-        var ScoreA = "2";
-        var ScoreB = "2";
+        var ScoreA = matches[i].children[0].children[1].children[0].innerText;
+        var ScoreB = matches[i].children[0].children[1].children[1].innerText;
         //すべての項目取得後、ScoreDataObject単位で管理する。
         var scoreObj = new ScoreDataObject(nameA, Number(ScoreA), nameB, Number(ScoreB), timestamp, urlString, true);
         console.log(scoreObj);
@@ -115,7 +171,7 @@ function getTargetSiteDomStr(urlString) {
             console.log("errorThrown    : " + errorThrown.message);
         },
       complete : function(data) {
-             alert("finishi");
+            // alert("finishi");
          }
     });
     console.log('gettargetsitedomobj' + target_result);
