@@ -1,8 +1,14 @@
 // import exfunc from './sup.js';
 
-const yahoo = "https://baseball.yahoo.co.jp/npb/game/2018033001/text?manual=1";
-var text_html = "";
-var urlString = "";
+const yahoo = "https://baseball.yahoo.co.jp/npb/schedule/?date=20180404";
+
+// ------------------------------------------------------------
+// PatterA  top-score
+// ------------------------------------------------------------
+//山梨日日
+const sannichi = "https://sports.sannichi.co.jp/smp/sports/pro_baseball/";
+//秋田魁
+const sakigake = "http://sports.sakigake.jp/smp/sports/pro_baseball/";
 
 $(document).on('click', '#button01', function () {
     //クリックした後の処理
@@ -14,25 +20,25 @@ $(document).on('click', '#button01', function () {
     console.log("URL = " + this.urlString);
 
     //5秒毎にYahooからデータを呼び出す。
-    setInterval(compareScoreData, 5000, this.urlString);
-
+    //setInterval(compareScoreData, 500000, this.urlString);
+    compareScoreData();
 });
 
 
-// function test() {
-//     exfunc();
-// }
-
 function compareScoreData() {
 
-   let standardScore = getStandardScore(yahoo);
-   console.log("compareScoreData resultval" + standardScore);
+    //TimeStampを 取得する 出力例:2008/5/1 2:00:00
+    let timestamp = toLocaleString(new Date());
+
+    let standardScoreList = getStandardScore(yahoo, timestamp);
+    let patternAScoreList = getPatternAScoreList(sakigake, timestamp);
+
 
 
 }
 
 //get standard of comparison From Yahoo
-function getStandardScore(urlString) {
+function getStandardScore(urlString, timestamp) {
 
     let document_str = getTargetSiteDomStr(urlString);
     let document_obj = ParsingStringToDomObject(document_str) || 'notexist';
@@ -42,35 +48,53 @@ function getStandardScore(urlString) {
     if (document_obj == null) {
         console.log('getStandardScore :  document_obj == null');
     }
-    // 出力テスト
-    var ScoreTableElements = document_obj.getElementById("yjSNLiveTextscoreboard")
-        .getElementsByTagName("div")[0]
-        .getElementsByTagName("table")[0]
-        .getElementsByTagName("tbody")[0]
-        .querySelectorAll("tr.yjMS td.sum");
 
-    //TargetNodeから取得した点数を取得して、Arrayに変換する。
-    // var testDivs = Array.prototype.filter.call(ScoreTableElements, function (ScoreTableElement) {
-    //     return ScoreTableElement.innerText;
-    // });
+    //var matches = document_obj.querySelectorAll("#gm_sch table.teams tbody td.yjMS.bt");
+    var matches = document_obj.querySelectorAll("#gm_sch table.teams");
+    console.log("matches" + matches);
+    var scoreObjList = [];
 
-    var scoreObj = new ScoreDataObject('',-1,'',-1,'','',true);
-
-    for (item in ScoreTableElements) {
-        var testval = Number(ScoreTableElements[item].innerText);
-        if(testval.length == 0){
-            throw new 'EmptyScoreData';
-        }
-        if (scoreObj.score_A < 0) {
-            scoreObj.score_A = testval;
-        }else if (scoreObj.score_B < 0) {
-            scoreObj.score_B = testval;
-        }
+    for (var i = 0; i < matches.length; i++) {
+        var nameA = matches[i].children[0].children[0].children[1].children[0].children[0].innerText;
+        var nameB = matches[i].children[0].children[1].children[1].children[0].children[0].innerText;
+        var ScoreA = matches[i].children[0].children[0].children[2].children[0].children[0].children[0].children[0].innerText;
+        var ScoreB = matches[i].children[0].children[0].children[2].children[0].children[0].children[2].children[0].innerText;
+        //すべての項目取得後、ScoreDataObject単位で管理する。
+        var scoreObj = new ScoreDataObject(nameA, Number(ScoreA), nameB, Number(ScoreB), timestamp, urlString, true);
+        console.log(scoreObj);
+        scoreObjList.push(scoreObj);
     }
 
-    return scoreObj;
-}
+    console.log(scoreObjList.length);
 
+    return scoreObjList;
+}
+function getPatternAScoreList(urlString, timestamp) {
+    let document_str = getTargetSiteDomStr(urlString);
+    let document_obj = ParsingStringToDomObject(document_str) || 'notexist';
+
+    // パースに成功した
+    console.log("print document_obj" + document_obj);
+    if (document_obj == null) {
+        console.log('getStandardScore :  document_obj == null');
+    }
+    var matches = document_obj.querySelectorAll("div.top-score section.score-detail-mini");
+    console.log("matches" + matches);
+    var scoreObjList = [];
+
+    for (var i = 0; i < matches.length; i++) {
+        //section.score-detail-mini p strong.team basball-(teamname)
+        var nameA = matches[i].children[0].children[0].innerText;
+        var nameB = matches[i].children[0].children[2].innerText;
+        var ScoreA = "2";
+        var ScoreB = "2";
+        //すべての項目取得後、ScoreDataObject単位で管理する。
+        var scoreObj = new ScoreDataObject(nameA, Number(ScoreA), nameB, Number(ScoreB), timestamp, urlString, true);
+        console.log(scoreObj);
+        scoreObjList.push(scoreObj);
+    }
+    return scoreObjList;
+}
 
 function getTargetSiteDomStr(urlString) {
     console.log("url in ajax" + urlString);
@@ -84,9 +108,15 @@ function getTargetSiteDomStr(urlString) {
             console.log('ajax result' + data);
             target_result = data;
         },
-        error: function () {
-            alert('問題がありました。');
-        }
+        error : function(XMLHttpRequest, textStatus, errorThrown) {
+            console.log("ajax通信に失敗しました");
+            console.log("XMLHttpRequest : " + XMLHttpRequest.status);
+            console.log("textStatus     : " + textStatus);
+            console.log("errorThrown    : " + errorThrown.message);
+        },
+      complete : function(data) {
+             alert("finishi");
+         }
     });
     console.log('gettargetsitedomobj' + target_result);
     return target_result;
@@ -122,6 +152,16 @@ function ParsingStringToDomObject(data) {
     return document_obj;
 }
 
+function toLocaleString(date) {
+    return [
+        date.getFullYear(),
+        date.getMonth() + 1,
+        date.getDate()
+    ].join('/') + ' '
+        + date.toLocaleTimeString();
+}
+
+
 class ScoreDataObject {
 
     constructor(teamName_A, score_A, teamName_B, score_B, recoredTime, site, compareFlag) {
@@ -136,8 +176,8 @@ class ScoreDataObject {
 
 }
 
-class ScoreViewModel{
-    constructor(ScoreDataObjectList){
+class ScoreViewModel {
+    constructor(ScoreDataObjectList) {
         this.ScoreDataObjectList = ScoreDataObjectList;
     }
 
